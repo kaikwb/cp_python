@@ -69,48 +69,7 @@
      </layout>
     </item>
     <item>
-     <widget class="QTableWidget" name="booksTableWidget">
-      <column>
-       <property name="text">
-        <string>Título</string>
-       </property>
-      </column>
-      <column>
-       <property name="text">
-        <string>Autor</string>
-       </property>
-      </column>
-      <column>
-       <property name="text">
-        <string>ISBN</string>
-       </property>
-      </column>
-      <column>
-       <property name="text">
-        <string>Ano</string>
-       </property>
-      </column>
-      <column>
-       <property name="text">
-        <string>Disponível</string>
-       </property>
-      </column>
-      <column>
-       <property name="text">
-        <string>Raro</string>
-       </property>
-      </column>
-      <column>
-       <property name="text">
-        <string>Edição</string>
-       </property>
-      </column>
-      <column>
-       <property name="text">
-        <string>Estado</string>
-       </property>
-      </column>
-     </widget>
+     <widget class="QTableView" name="booksTableView"/>
     </item>
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout_2">
