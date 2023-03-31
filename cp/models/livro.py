@@ -8,6 +8,7 @@ class Livro(object):
     Abaixo links para a documentação do Python que descrevem isso:
     https://docs.python.org/3/library/stdtypes.html#object.__dict__
     """
+
     def __init__(self, titulo: str, autor: str, isbn: str, ano_publicacao: int, disponivel: bool):
         super().__init__()
         self.a = 5
