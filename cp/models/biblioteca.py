@@ -1,6 +1,8 @@
-from .livro import Livro
 from typing import Optional, List
+
 from cp.exceptions import BookAlreadyRegistred, BookAlreadyBorrowed, BookNotBorrowed
+from cp.utils import fuzzy_search, title_processor, author_processor, isbn_processor
+from .livro import Livro
 
 
 class Biblioteca(object):
@@ -35,16 +37,31 @@ class Biblioteca(object):
         else:
             return None
 
+    def busca_nebulosa(self, search_text: str, search_type: str) -> List[Livro]:
+        match search_type:
+            case "Título":
+                processor = title_processor
+            case "Autor":
+                processor = author_processor
+            case "ISBN":
+                processor = isbn_processor
+            case _:
+                processor = title_processor
+
+        return fuzzy_search(search_text, self.livros, processor=processor)
+
     def listar_livros(self) -> List[Livro]:
         return self.livros
 
-    def registrar_emprestimo(self, livro: Livro) -> None:
+    @staticmethod
+    def registrar_emprestimo(livro: Livro) -> None:
         if livro.disponivel:
             livro.emprestar()
         else:
             raise BookAlreadyBorrowed(livro)
 
-    def registrar_devolucao(self, livro: Livro) -> None:
+    @staticmethod
+    def registrar_devolucao(livro: Livro) -> None:
         if livro.disponivel:
             raise BookNotBorrowed(livro)
         else:

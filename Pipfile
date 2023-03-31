@@ -5,6 +5,7 @@ name = "pypi"
 
 [packages]
 pyside6 = "*"
+thefuzz = {extras = ["speedup"], version = "*"}
 
 [dev-packages]
 

@@ -1,55 +1,16 @@
-from PySide6.QtWidgets import QMainWindow, QTableWidgetItem
-from PySide6.QtCore import Slot, QAbstractTableModel, QModelIndex
-from .ui.main import Ui_MainWindow
-from .add_book import AddBooxWindow
-from cp.models.biblioteca import Biblioteca
-
-from cp.models.livro_raro import LivroRaro
-
-from cp.models.book_table import BookTableModel
-
-from PySide6.QtCore import Qt
-
+from collections.abc import Iterable
 from typing import List
 
-#
-# class MyTableModel(QAbstractTableModel):
-#     def __init__(self, data, headers):
-#         super().__init__()
-#         self._data = data
-#         self._headers = headers
-#
-#     def rowCount(self, parent=QModelIndex()):
-#         return len(self._data)
-#
-#     def columnCount(self, parent=QModelIndex()):
-#         return len(self._headers)
-#
-#     def data(self, index, role=Qt.DisplayRole):
-#         if role == Qt.DisplayRole or role == Qt.EditRole:
-#             return self._data[index.row()][index.column()]
-#         elif role == Qt.CheckStateRole and index.column() == 0:
-#             return Qt.Checked if self._data[index.row()][index.column()] else Qt.Unchecked
-#
-#     def setData(self, index, value, role=Qt.EditRole):
-#         if role == Qt.CheckStateRole and index.column() == 0:
-#             self._data[index.row()][index.column()] = value == Qt.Checked
-#             self.dataChanged.emit(index, index)
-#             return True
-#         elif role == Qt.EditRole:
-#             self._data[index.row()][index.column()] = value
-#             self.dataChanged.emit(index, index)
-#             return True
-#         return False
-#
-#     def flags(self, index):
-#         if index.column() == 0:
-#             return Qt.ItemIsUserCheckable | super().flags(index)
-#         return super().flags(index)
-#
-#     def headerData(self, section, orientation, role=Qt.DisplayRole):
-#         if role == Qt.DisplayRole and orientation == Qt.Horizontal:
-#             return self._headers[section]
+from PySide6.QtCore import Qt
+from PySide6.QtCore import Slot, QModelIndex
+from PySide6.QtWidgets import QMainWindow, QMessageBox
+
+from cp.exceptions import BookAlreadyBorrowed, BookNotBorrowed, BookNotFound
+from cp.models.biblioteca import Biblioteca
+from cp.models.book_table import BookTableModel
+from cp.models.livro import Livro
+from .add_book import AddBooxWindow
+from .ui.main import Ui_MainWindow
 
 
 class MainWindow(QMainWindow):
@@ -60,43 +21,135 @@ class MainWindow(QMainWindow):
 
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        self.__table_model = BookTableModel([])
+        self.__table_model = BookTableModel(self.__library.listar_livros())
         self.ui.booksTableView.setModel(self.__table_model)
-        self.__table_model.fill_books([LivroRaro("a", "b", "1234", 2022, 1, "ruim", True)])
 
-        self.ui.removeBookButton.setEnabled(False)
-        self.ui.borrowBookButton.setEnabled(False)
-        self.ui.returnBookButton.setEnabled(False)
+        self.enable_book_operations(False)
 
         self.ui.addBookButton.clicked.connect(self.add_book)
+        self.ui.removeBookButton.clicked.connect(self.remove_book)
         self.ui.listBooksButton.clicked.connect(self.list_all_books)
+        self.ui.borrowBookButton.clicked.connect(self.borrow_book)
+        self.ui.returnBookButton.clicked.connect(self.return_book)
+        self.ui.searchButton.clicked.connect(self.search_book)
 
-    def __fill_list_table(self, books: List):
-        table = self.ui.booksTableWidget
-        # table.clearContents()
-        # table.setRowCount(len(books))
-        #
-        # for i, book in enumerate(books):
-        #     title = self.__create_table_cell(book.titulo)
-        #     author = self.__create_table_cell(book.autor)
-        #     isbn = self.__create_table_cell(book.isbn)
-        #     year = self.__create_table_cell(str(book.ano_publicacao))
-        #     is_available = self.__create_table_cell("", is_bool=True)
-        #
-        #     table.setItem(i, 0, title)
-        #     table.setItem(i, 1, author)
-        #     table.setItem(i, 2, isbn)
-        #     table.setItem(i, 3, year)
-        #     table.setItem(i, 4, is_available)
+        self.ui.booksTableView.selectionModel().currentRowChanged.connect(self.select_item)
+
+        self.ui.searchEdit.textEdited.connect(self.search_on_change)
+        self.ui.searchComboBox.currentTextChanged.connect(self.search_on_change)
 
     @Slot()
-    def add_book(self):
+    def add_book(self) -> None:
         wnd = AddBooxWindow(self.__library, self)
         wnd.show()
         wnd.exec()
-        print("End")
+        self.__table_model.redraw_items()
 
     @Slot()
-    def list_all_books(self):
-        books = self.__library.listar_livros()
-        self.__fill_list_table(books)
+    def remove_book(self) -> None:
+        book = self.get_selected_book()
+        self.__library.remover_livro(book)
+        self.__table_model.redraw_items()
+
+    @Slot()
+    def list_all_books(self) -> None:
+        self.__table_model.fill_books(self.__library.listar_livros())
+
+    @Slot()
+    def borrow_book(self) -> None:
+        book = self.get_selected_book()
+
+        try:
+            self.__library.registrar_emprestimo(book)
+            self.show_borrow_success_message()
+        except BookAlreadyBorrowed:
+            self.show_borrow_fail_message()
+
+        self.__table_model.redraw_items()
+
+    @Slot()
+    def return_book(self) -> None:
+        book = self.get_selected_book()
+
+        try:
+            self.__library.registrar_devolucao(book)
+            self.show_return_success_message()
+        except BookNotBorrowed:
+            self.show_return_fail_message()
+
+        self.__table_model.redraw_items()
+
+    @Slot()
+    def enable_book_operations(self, state) -> None:
+        self.ui.removeBookButton.setEnabled(state)
+        self.ui.borrowBookButton.setEnabled(state)
+        self.ui.returnBookButton.setEnabled(state)
+
+    @Slot(QModelIndex, QModelIndex)
+    def select_item(self, selected: QModelIndex, deselected: QModelIndex) -> None:
+        row = selected.row()
+        self.enable_book_operations(True if row >= 0 else False)
+
+    @Slot()
+    def search_book(self) -> None:
+        search_text = self.ui.searchEdit.text()
+        search_type = self.ui.searchComboBox.currentText()
+
+        if search_text == "":
+            self.list_all_books()
+        else:
+            try:
+                if self.is_fuzzy_search:
+                    search_result = self.fuzzy_search(search_text, search_type)
+                else:
+                    search_result = self.fuzzy_search(search_text, search_type)
+            except BookNotFound:
+                search_result = list()
+                self.show_search_fail_message()
+
+            self.__table_model.fill_books(search_result)
+
+    def search_single(self, search_text: str, search_type: str) -> List[Livro]:
+        if search_type == "Título":
+            search_result = self.__library.buscar_livro_por_titulo(search_text)
+        elif search_type == "Autor":
+            search_result = self.__library.buscar_livro_por_autor(search_text)
+        else:
+            search_result = self.__library.buscar_livro_por_isbn(search_text)
+
+        if search_result is None:
+            raise BookNotFound(search_type, search_text)
+        else:
+            return search_result if isinstance(search_result, Iterable) else [search_result]
+
+    def fuzzy_search(self, search_text: str, search_type: str) -> List[Livro]:
+        return self.__library.busca_nebulosa(search_text, search_type)
+
+    @Slot()
+    def search_on_change(self) -> None:
+        if self.is_fuzzy_search:
+            self.search_book()
+
+    @property
+    def is_fuzzy_search(self) -> bool:
+        return self.ui.fuzzyCheckBox.checkState() == Qt.CheckState.Checked
+
+    def get_selected_book(self) -> Livro:
+        row = self.ui.booksTableView.selectionModel().currentIndex().row()
+        book = self.__table_model.get_book(row)
+        return book
+
+    def show_borrow_success_message(self) -> None:
+        QMessageBox.information(self, "Emprestar Livro", "Livro emprestado com sucesso.", QMessageBox.StandardButton.Ok)
+
+    def show_borrow_fail_message(self) -> None:
+        QMessageBox.critical(self, "Emprestar Livro", f"Livro já está emprestado.", QMessageBox.StandardButton.Ok)
+
+    def show_return_success_message(self) -> None:
+        QMessageBox.information(self, "Devolver Livro", "Livro devolvido com sucesso.", QMessageBox.StandardButton.Ok)
+
+    def show_return_fail_message(self) -> None:
+        QMessageBox.critical(self, "Devolver Livro", f"Livro não está emprestado.", QMessageBox.StandardButton.Ok)
+
+    def show_search_fail_message(self) -> None:
+        QMessageBox.critical(self, "Buscar Livro", f"Nenhum livro encontrado.", QMessageBox.StandardButton.Ok)

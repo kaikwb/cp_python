@@ -8,7 +8,7 @@ class Livro(object):
         self.__year = ano_publicacao
         self.__available = disponivel
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.autor} - {self.titulo} ({self.ano_publicacao}) - ISDB:{self.isbn} [{self.disponivel}]"
 
     @property
@@ -31,8 +31,8 @@ class Livro(object):
     def disponivel(self) -> bool:
         return self.__available
 
-    def emprestar(self):
+    def emprestar(self) -> None:
         self.__available = False
 
-    def devolver(self):
+    def devolver(self) -> None:
         self.__available = True

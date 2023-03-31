@@ -8,8 +8,9 @@ class LivroRaro(Livro):
         self.__edition = edicao
         self.__state = estado
 
-    def __str__(self):
-        pass
+    def __str__(self) -> str:
+        return f"{self.autor} - {self.titulo} ({self.ano_publicacao}) - ISDB:{self.isbn} [{self.disponivel}] - " \
+               f"Edição: {self.edicao} - Estado: {self.estado}"
 
     @property
     def edicao(self) -> int:

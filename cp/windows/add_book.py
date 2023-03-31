@@ -1,6 +1,6 @@
 from typing import Dict
 
-from PySide6.QtCore import Slot
+from PySide6.QtCore import Slot, Qt
 from PySide6.QtWidgets import QDialog, QMessageBox
 from PySide6.QtWidgets import QWidget
 
@@ -20,6 +20,11 @@ class AddBooxWindow(QDialog):
 
         self.ui = Ui_AddBook()
         self.ui.setupUi(self)
+
+        self.ui.editionEdit.setEnabled(False)
+        self.ui.stateEdit.setEnabled(False)
+
+        self.ui.isRareBookCheckBox.stateChanged.connect(self.rare_book_state_changed)
 
     def __get_book_attributes(self) -> Dict[str, str | bool]:
         attr = dict()
@@ -79,3 +84,14 @@ class AddBooxWindow(QDialog):
     def accept(self) -> None:
         self.__add_book_to_library()
         self.close()
+
+    @Slot(int)
+    def rare_book_state_changed(self, state: int) -> None:
+        if Qt.CheckState(state) == Qt.CheckState.Checked:
+            self.ui.editionEdit.setEnabled(True)
+            self.ui.stateEdit.setEnabled(True)
+        else:
+            self.ui.editionEdit.setEnabled(False)
+            self.ui.stateEdit.setEnabled(False)
+            self.ui.editionEdit.clear()
+            self.ui.stateEdit.clear()
