@@ -6,6 +6,16 @@ from .livro import Livro
 
 
 class Biblioteca(object):
+    """
+    É solicitado para implementar um método __dict__(self), porém __dict__ é um atributo que armazena o namespace
+    da classe/objeto e não um método.
+
+    Sobreescrever ele como método pode levar ao sistema apresentar comportamentos não esperados e não é recomendavel.
+
+    Abaixo links para a documentação do Python que descrevem isso:
+    https://docs.python.org/3/library/stdtypes.html#object.__dict__
+    """
+
     def __init__(self):
         self.__books = list()
 

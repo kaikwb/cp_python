@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'mainwurKBf.ui'
+## Form generated from reading UI file 'mainnWlopn.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.4.3
 ##
@@ -24,7 +24,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(669, 274)
+        MainWindow.resize(816, 274)
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         self.verticalLayout = QVBoxLayout(self.centralwidget)
@@ -100,6 +100,12 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_2.addWidget(self.returnBookButton)
 
+        self.listBorrowedButton = QPushButton(self.centralwidget)
+        self.listBorrowedButton.setObjectName(u"listBorrowedButton")
+        self.listBorrowedButton.setMinimumSize(QSize(125, 0))
+
+        self.horizontalLayout_2.addWidget(self.listBorrowedButton)
+
 
         self.verticalLayout.addLayout(self.horizontalLayout_2)
 
@@ -124,5 +130,6 @@ class Ui_MainWindow(object):
         self.listBooksButton.setText(QCoreApplication.translate("MainWindow", u"Listar Todos os Livros", None))
         self.borrowBookButton.setText(QCoreApplication.translate("MainWindow", u"Emprestar Livro", None))
         self.returnBookButton.setText(QCoreApplication.translate("MainWindow", u"Devolver Livro", None))
+        self.listBorrowedButton.setText(QCoreApplication.translate("MainWindow", u"Listar Livros Emprestados", None))
     # retranslateUi
 

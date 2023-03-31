@@ -32,6 +32,7 @@ class MainWindow(QMainWindow):
         self.ui.borrowBookButton.clicked.connect(self.borrow_book)
         self.ui.returnBookButton.clicked.connect(self.return_book)
         self.ui.searchButton.clicked.connect(self.search_book)
+        self.ui.listBorrowedButton.clicked.connect(self.list_borrowed_books)
 
         self.ui.booksTableView.selectionModel().currentRowChanged.connect(self.select_item)
 
@@ -54,6 +55,10 @@ class MainWindow(QMainWindow):
     @Slot()
     def list_all_books(self) -> None:
         self.__table_model.fill_books(self.__library.listar_livros())
+
+    @Slot()
+    def list_borrowed_books(self) -> None:
+        self.__table_model.fill_books(self.__library.listar_livros_emprestados())
 
     @Slot()
     def borrow_book(self) -> None:
